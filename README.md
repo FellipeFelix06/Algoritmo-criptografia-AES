@@ -58,8 +58,9 @@ como rodadas.
 
 ## Processo 1 - KeyExpansion.
 - É nesse processo que é de é definido as rodadas de acordo com o tamanho
-das chaves.
-
+das chaves. É feita uma lógica parecida com o da criptografia, dentre os
+processos estão: Rotação de palavras, substituição de cada byte pela tabela
+s-box, xor de cada byte com uma outra tabela chamada rcon.
 ```
 10 rodadas - 128 bits
 12 rodadas - 192 bits
