@@ -18,7 +18,9 @@ class KeyExpansion():
     def keyexpansion(self):
         palavras = (44 if len(self.key) == 16 else 52 if len(self.key) == 24 else 60)
         grupos_palavras = (4 if palavras == 44 else 6 if palavras == 52 else 8)
+
         bloco = [list(self.key[i:i+4]) for i in range(0, 16, 4)]
+        
         for i in range(4, palavras):
             palavra_temp = bloco[i - 1]
             if i % 4 == 0:
