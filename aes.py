@@ -1,8 +1,8 @@
-from s_box.sbox import s_box
-from s_box.inv_sbox import inv_sbox
-from matriz_fixa.matriz import m_mixcolumns
-from matriz_fixa.matriz import inv_mixcolumns
-from key_expansion import KeyExpansion
+from sbox.sbox import sbox
+from sbox.sbox import inv_sbox
+from mixcolumns.mixcolumns import mixcolumns
+from mixcolumns.mixcolumns import inv_mixcolumns
+from key_expansion.key_expansion import KeyExpansion
 
 class AES:
     def __init__(self, key: bytes) -> None:
@@ -29,7 +29,7 @@ class AES:
         return result
     
     def subbytes(self, data):
-        result = [s_box[(b >> 4) & 0x0F][b & 0x0F] for b in data]
+        result = [sbox[(b >> 4) & 0x0F][b & 0x0F] for b in data]
         return result
     
     def shiftrows(self, matriz):
@@ -94,7 +94,7 @@ class AES:
 
                 transposta = list(zip(*matriz))
 
-                nova_transposta = self.mixcolumns(transposta, m_mixcolumns)
+                nova_transposta = self.mixcolumns(transposta, mixcolumns)
 
                 matriz = [list(linha) for linha in zip(*nova_transposta)]
                 estado = [byte for linha in matriz for byte in linha]
@@ -156,17 +156,3 @@ class AES:
             texto_decifrado += bytes(estado)
 
         return self.pcks7_unpad(texto_decifrado)
-
-if __name__ == '__main__':
-
-    CHAVE = b'EstaEhUmaChaveCom32Caracteres...'
-    mensagem = 'olá Mundo!'
-    MSG_BYTES = bytes(mensagem, 'utf-8')
-
-    aes_new = AES(CHAVE)
-    criptografar = aes_new.encrypt(MSG_BYTES)
-    descriptografar = aes_new.decrypt(criptografar)
-
-    print("Texto original:", mensagem)
-    print('Texto criptografado:', criptografar.hex())
-    print("Texto descriptografado:", descriptografar.decode('utf-8'))

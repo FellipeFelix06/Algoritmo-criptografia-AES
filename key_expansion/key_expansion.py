@@ -1,5 +1,11 @@
-from s_box.sbox import s_box
-from rcon.rcon_tabela import rcon
+from pathlib import Path
+import sys
+sbox_dir = Path(__file__).parent.parent
+rcon_dir = Path(__file__).parent.parent
+sys.path.append(str(sbox_dir))
+sys.path.append(str(rcon_dir))
+from sbox.sbox import sbox
+from rcon.rcon import rcon
 
 class KeyExpansion():
 
@@ -25,7 +31,7 @@ class KeyExpansion():
             palavra_temp = bloco[i - 1]
             if i % 4 == 0:
                 palavra_temp = self.rot_byte(palavra_temp)
-                palavra_temp = self.sub_byte(palavra_temp, s_box)
+                palavra_temp = self.sub_byte(palavra_temp, sbox)
                 palavra_temp = self.xor_byte(palavra_temp, rcon[i // grupos_palavras])
 
             novos_bytes = self.xor_byte(bloco[i - 4], palavra_temp)

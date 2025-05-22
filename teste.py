@@ -31,35 +31,34 @@ def test_campo_finito(a, b):
         b >>= 1
     return acumulador
 
-if __name__ == '__main__':
-    sbox = [
-        [0x63, 0x7C, 0x77, 0x7B, 0xF2],
-        [0xCA, 0x82, 0xC9, 0x7D, 0xFA],
-    ]
+sbox = [
+    [0x63, 0x7C, 0x77, 0x7B, 0xF2],
+    [0xCA, 0x82, 0xC9, 0x7D, 0xFA],
+]
 
-    matriz = [
-        [0x02, 0x03, 0x01, 0x01],
-        [0x01, 0x02, 0x03, 0x01],
-        [0x01, 0x01, 0x02, 0x03],
-        [0x03, 0x01, 0x01, 0x02],
-    ]
+matriz = [
+    [0x02, 0x03, 0x01, 0x01],
+    [0x01, 0x02, 0x03, 0x01],
+    [0x01, 0x01, 0x02, 0x03],
+    [0x03, 0x01, 0x01, 0x02],
+]
 
-    data = b'1'
-    key = b'3'
+data = b'1'
+key = b'3'
 
-    a = 4 # 1000 = binário
-    b = 7 # 1100 = binário # 1000 &
+a = 4 # 1000 = binário
+b = 7 # 1100 = binário # 1000 &
 
-    variavel = test_padding(data)
-    variavel = test_addroundkey(variavel, key)
-    variavel = test_subbytes(variavel, sbox)
+variavel = test_padding(data)
+variavel = test_addroundkey(variavel, key)
+variavel = test_subbytes(variavel, sbox)
 
-    matriz_transposta = list(zip(*matriz))
+matriz_transposta = list(zip(*matriz))
 
-    resultado = []
+resultado = []
 
-    for coluna in matriz_transposta:
-        for c in coluna:
-            for j in variavel:
-                resultado.append(test_campo_finito(j, c))
-    print(resultado)
+for coluna in matriz_transposta:
+    for c in coluna:
+        for j in variavel:
+            resultado.append(test_campo_finito(j, c))
+print(resultado)
