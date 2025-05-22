@@ -164,7 +164,7 @@ if __name__ == '__main__':
     MSG_BYTES = bytes(mensagem, 'utf-8')
 
     aes_new = AES(CHAVE)
-    criptografar = aes_new.encrypt(MSG_BYTES, )
+    criptografar = aes_new.encrypt(MSG_BYTES)
     descriptografar = aes_new.decrypt(criptografar)
 
     print("Texto original:", mensagem)
