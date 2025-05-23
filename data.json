@@ -1,0 +1,42 @@
+{
+    "tv": {
+        "1": {
+            "marca": "Samsung",
+            "modelo": "UN43T5300",
+            "tela": "LED",
+            "preco": "1699.00"
+        },
+        "2": {
+            "marca": "LG",
+            "modelo": "43LR6700PSA",
+            "tela": "IPS",
+            "preco": "1769.00"
+        },
+        "3": {
+            "marca": "Samsung",
+            "modelo": "QN55Q70DAGXZD",
+            "tela": "QLED",
+            "preco": "3603.09"
+        }
+    },
+    "celular": {
+        "4": {
+            "marca": "Xiaomi",
+            "modelo": "12",
+            "memoria": "256/8gb",
+            "preco": "1299.00"
+        },
+        "5": {
+            "marca": "Iphone",
+            "modelo": "15",
+            "memoria": "128/6gb",
+            "preco": "4230.00"
+        },
+        "6": {
+            "marca": "Iphone",
+            "modelo": "16-Pro-Max",
+            "memoria": "256/8gb",
+            "preco": "8903.72"
+        }
+    }
+}

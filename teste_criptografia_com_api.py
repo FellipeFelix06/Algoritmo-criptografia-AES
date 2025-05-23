@@ -7,8 +7,8 @@ load_dotenv()
 
 
 if __name__ == '__main__':
-    DIR_CSV = Path(__file__).parent / 'teste_api' / 'data.csv'
-    DIR_DUMP = Path(__file__).parent / 'dump.csv'
+    DIR_CSV = Path(__file__).parent / 'data.json'
+    DIR_DUMP = Path(__file__).parent / 'dump.json'
     key = os.getenv('KEY_AES', '')
     key_bytes = bytes.fromhex(key)
     aes = AES(key=key_bytes)

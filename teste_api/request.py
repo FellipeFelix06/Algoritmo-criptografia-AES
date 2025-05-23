@@ -1,17 +1,22 @@
 import requests
-from pprint import pprint
 
-print = pprint
-
-url = 'http://127.0.0.1:5000/dados'
+url = 'http://127.0.0.1:5000/tv/0'
 
 token = 'AB_4g1dhJvysdrfR9HPax49hjYh2nv5UhjqbMz5a2RMG1'
 
 header = {
     'Authorization': f'Bearer {token}',
+    'Content-Type': 'application/json'
 }
 
-response = requests.get(url=url, headers=header)
+data = {
+    "marca": "PICA",
+    "modelo": "awdsregsgr",
+    "tela": "QLED",
+    "preco": "3603.09"
+}
+
+response = requests.post(url=url, headers=header, json=data)
 
 if __name__ == '__main__':
     if response.status_code >= 200 or response.status_code <= 299:
