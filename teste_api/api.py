@@ -45,72 +45,72 @@ def decrypt():
         cipher_bytes = bytes.fromhex(cipher)
         return aes.decrypt(cipher_bytes).decode('utf-8')
 
-@app.route('/tv', methods=['GET'])
-def listar_tv():
+@app.route('/<produto>', methods=['GET'])
+def listar_tudo(produto):
     erro = check_token()
     if erro:
         return erro
     decrypt_json = decrypt()
-    lista_tv = json.loads(decrypt_json)
-    return jsonify([{"id": id, **info} for id, info in lista_tv.get('tv', {}).items()])
+    listar_tudo = json.loads(decrypt_json)
+    return jsonify([{"id": id, **info} for id, info in listar_tudo.get(produto, {}).items()])
 
-@app.route('/tv/<int:id>', methods=['GET'])
-def listar_uma_tv(id):
+@app.route('/<produto>/<int:id>', methods=['GET'])
+def listar_um(produto, id):
     erro = check_token()
     if erro:
         return erro
     decrypt_json = decrypt()
-    lista_uma_tv = json.loads(decrypt_json)
-    tv_dict = lista_uma_tv.get('tv', {})
-    tv_info = tv_dict.get(str(id))
-    if tv_info is None:
-        return jsonify({'error': 'id não encontrado.'}), 401
-    return jsonify({"id": str(id), **tv_info})
+    listar_tudo = json.loads(decrypt_json)
+    celular_dict = listar_tudo.get(produto, {})
+    celular_info = celular_dict.get(str(id))
+    if celular_info is None:
+        return jsonify({'error': 'id inválido'}), 401
+    return jsonify({"id": str(id), **celular_info})
 
 
-@app.route('/tv/<int:id>', methods=['PUT'])
-def editar_uma_tv(id):
+@app.route('/<produto>/<int:id>', methods=['PUT'])
+def editar_um(produto, id):
     erro = check_token()
     if erro:
         return erro
     decrypt_json = decrypt()
-    lista_uma_tv = json.loads(decrypt_json)
+    listar_tudo = json.loads(decrypt_json)
     response = request.get_json()
-    tv_dict = lista_uma_tv.get('tv', {})
-    tv_info = tv_dict.get(str(id))
-    if tv_info is None:
-        return jsonify({'error': 'id não encontrado.'}), 401
-    tv_info.update(response)
-    return jsonify({"id": str(id), **tv_info})
+    produto_dict = listar_tudo.get(produto, {})
+    produto_info = produto_dict.get(str(id))
+    if produto_info is None:
+        return jsonify({'error': 'id inválido'}), 401
+    produto_info.update(response)
+    return jsonify({"id": str(id), **produto_info})
 
-@app.route('/tv/<int:id>', methods=['DELETE'])
-def deletar_uma_tv(id):
+@app.route('/<produto>/<int:id>', methods=['DELETE'])
+def deletar_um(produto, id):
     erro = check_token()
     if erro:
         return erro
     decrypt_json = decrypt()
-    lista_uma_tv = json.loads(decrypt_json)
-    tv_dict = lista_uma_tv.get('tv', {})
-    tv_info = tv_dict.get(str(id))
-    if tv_info is None:
-        return jsonify({'error': 'id não encontrado.'}), 401
-    del tv_info
-    return jsonify({'lista_tv': tv_dict})
+    listar_tudo = json.loads(decrypt_json)
+    produto_dict = listar_tudo.get(produto, {})
+    produto_info = produto_dict.get(str(id))
+    if produto_info is None:
+        return jsonify({'error': 'id inválido'}), 401
+    del produto_info
+    return jsonify({'lista_tv': produto_dict})
 
-@app.route('/tv/<int:id>', methods=['POST'])
-def criar_uma_tv(id):
+@app.route('/<produto>/<int:id>', methods=['POST'])
+def criar_um(produto, id):
     erro = check_token()
     if erro:
         return erro
     decrypt_json = decrypt()
-    lista_uma_tv = json.loads(decrypt_json)
-    tv_dict = lista_uma_tv.get('tv', {})
+    listar_tudo = json.loads(decrypt_json)
+    produto_dict = listar_tudo.get(produto, {})
     response = request.get_json()
-    for i in tv_dict:
+    for i in produto_dict:
         if str(id) in i:
             return jsonify({'error': 'id já existente.'}), 401
-    tv_dict[str(id)] = response
-    lista_uma_tv['tv'] = tv_dict
-    return jsonify({"id": str(id), **tv_dict})
+    produto_dict[str(id)] = response
+    listar_tudo[produto] = produto_dict
+    return jsonify({"id": str(id), **produto_dict})
 
 app.run()

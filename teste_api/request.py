@@ -1,6 +1,6 @@
 import requests
 
-url = 'http://127.0.0.1:5000/tv/0'
+url = 'http://127.0.0.1:5000/celular'
 
 token = 'AB_4g1dhJvysdrfR9HPax49hjYh2nv5UhjqbMz5a2RMG1'
 
@@ -16,7 +16,7 @@ data = {
     "preco": "3603.09"
 }
 
-response = requests.post(url=url, headers=header, json=data)
+response = requests.get(url=url, headers=header)
 
 if __name__ == '__main__':
     if response.status_code >= 200 or response.status_code <= 299:
