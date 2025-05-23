@@ -67,7 +67,6 @@ def listar_um(produto, id):
         return jsonify({'error': 'id inválido'}), 401
     return jsonify({"id": str(id), **celular_info})
 
-
 @app.route('/<produto>/<int:id>', methods=['PUT'])
 def editar_um(produto, id):
     erro = check_token()
