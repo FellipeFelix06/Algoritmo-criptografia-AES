@@ -1,6 +1,6 @@
 import requests
 
-url = 'http://127.0.0.1:5000/celular'
+url = 'http://127.0.0.1:5000/celular/6'
 
 token = 'AB_4g1dhJvysdrfR9HPax49hjYh2nv5UhjqbMz5a2RMG1'
 

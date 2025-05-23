@@ -62,3 +62,5 @@ for coluna in matriz_transposta:
         for j in variavel:
             resultado.append(test_campo_finito(j, c))
 print(resultado)
+
+print(178 % 16)

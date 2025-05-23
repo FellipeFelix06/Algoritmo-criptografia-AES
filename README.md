@@ -4,34 +4,52 @@ A criptografia AES (Advanced Encryption Standard) é uma criptografia
 simétrica, ou seja, a mesma chave usada para criptografar é usada para 
 descriptografar.
 Por padrão vem com bloco fixo de 128 bits, mas pode ser de 192 ou 256 bits
+
+## O que precisamos saber?
+
 - O que são bits?
   
 bit é a menor unidade de informação computacional,
 1 caractere tem 1 Byte que contém 8 bits.
 Então uma chave de 128 bits contém 16 caraceres (16 x 8 = 128).
 
-- Convertendo cada Byte para hexadecimal:
+- Converter Bits para decimal.
 
-essa chave é convertida para hexadecimal (hex) que funciona da seguinte
-maneira.
+Existe uma maneira muito simples de converter bits para decimal,
+separamos 8 bits e classificamos cada um por "casas" de 7 a 0. Cada casa
+representa um expoente que será feito por base 2.
+
+Ou seja: 2^7 = 128, 2^6 = 64, 2^5 = 32, 2^4 = 16, 2^3 = 8, 2^2 = 4, 2^1 = 2,
+2^0 = 1.
+
+Multiplicamos cada bit pelo resultado de cada potência, e somamos todos os
+valores.
+
+7 6 5 4 3 2 1 0
+1 0 1 1 0 0 1 0
+
+128 + 0 + 32 + 16 + 0 + 0 + 2 + 0 = 178
+
+- Convertendo para Hexadecimal/ASCII:
+
 Cada caractere seja pontuação, letras ou números tem sua codificação de
 acordo com a tabela Unicode, Exemplo.: "A" na tabela representa 65, por ordem,
 os números de 0 até 31 são destinados aos caracteres de controle (esc, \n, \r)
 Os números de 32 até 64 são símbolos (@, !, ?, %), e apartir do 65 até 126
 são os caracteres comuns (A, B, C, a, b, c, 1, 2, 3) também inclui ([], \, ^,
-_, {}, |, ~).
+_, {}, |, ~) e assim sucessivamente.
 
 ![Tabela Unicode](images/tabela-unicode.png)
 
-Sabendo que "A" representa 65, para converter em hex basta pegar o valor
-e fazer a divisão inteira por 16, reservar o resultado que será o primeiro
-valor e fazer o resto da divisão e reservar o valor para a segunda posição.
+Com o resultado em decimal (178) fazemos a divisão do valor pelo divisor 16 e
+guardamos o resto da divisão.
 
-```65 ÷ 16 = 4 (resto 1)```
+```
+178 ÷ 16 = 11 (resto 2)
+11 % 16 = 0 (resto 11)
+```
 
-Por tanto, o hexadecimal de "A" é 0x41, caso o valor seja maior que 9 já não
-é tratado mais com números e sim com letras, pois o hexadecimal tem que ser
-composto por 16 caracteres puros.
+Em Hexadecimal deve-se conter 16 valores diferentes, são eles:
 
 ```
 0 = 0
@@ -51,12 +69,22 @@ composto por 16 caracteres puros.
 14 = E
 15 = F
 ```
+Os valores de 10 a 15 são representados por letras e os resultados
+das divisões são lidos de baixo para cima, com isso:
+>```
+>178 ÷ 16 = 11 (resto 2)
+>11 % 16 = 0 (resto 11)
+>```
+
+O valor decimal 178 em hexadecimal é ```0xB2```.
+
 
 Sendo assim, damos o ponta-pé inicial ao algorítimo. Para que a mensagem seja
 criptografada ela precisa passar por 4 processos que serão repetidos depois
 como rodadas.
 
 ## Processo 1 - KeyExpansion.
+
 - É nesse processo que é de é definido as rodadas de acordo com o tamanho
 das chaves. É feita uma lógica parecida com o da criptografia, dentre os
 processos estão: Rotação de palavras, substituição de cada byte pela tabela
@@ -68,6 +96,7 @@ s-box, xor de cada byte com uma outra tabela chamada rcon.
 ```
 
 ## Processo 2 - AddRoundKey.
+
 - cada byte da chave é combinado com os bytes da mensagem numa matriz 4x4
 usando operação bit por bit xor, que irei explicar como funciona.
 tomando como exemplo o "A" que na tabela é 65, transformando para binário
@@ -138,6 +167,7 @@ tamanho da chave, é feito o chamado 'Padding' (ou preenchimento) em hex
 nulos mesmo, apenas para completar o bloco fazendo assim uma condição.
 
 ## Processo 3 - 9, 11 ou 13 rodadas.
+
 1. SubBytes - após a AddRoundKey é feita a substituição de caracteres 
 (bytes) de forma não linear onde cada Byte em hexadecimal é substituido por
 outro de acordo com a tabela S-Box, o primeiro valor define a linha da tabela
@@ -183,10 +213,12 @@ se após o shift o mais significativo for 7 é feito um xor com o valor 0x1B:
 4. AddRoudKey - É feito mais uma vez o precesso de xor bit a bit.
 
 ## Processo Final - Ultima rodada (10, 12, 14).
+
 - Na ultima rodada é repetido mais uma vez 3 etapas, são elas: SubBytes,
 ShiftRows e AddRoudKey. 
 
 ## Processo de Descriptografia:
+
 - No processo de descriptografia, é feito da mesma forma porém inverso.
 
 - InvShiftRows - Todos os bytes voltam a sua posição:
@@ -213,3 +245,157 @@ com os mesmos do processo da criptografia.
 [0D 09 0E 0B]
 [0B 0D 09 0E]
 ```
+# Explicação do Código.
+
+> Mapa Mental:
+
+```
+main
+├── aes.py
+│
+├── key_expansion/
+│   └── key_expansion.py
+|
+├── mixcolumns/
+│   └── mixcolumns.py
+|
+├── rcon/
+│   └── rcon.py
+|
+├── sbox/
+│   └── sbox.py
+```
+
+## 1. key_expansion.py
+
+Começamos pelo KeyExpansion, principal módulo que define o rumo da criptografia
+
+### 1.1 Rotação de bytes
+
+- Nessa função é feito o split da data recebida onde ```data[1:] + data[:1]```
+faz a rotação do primeiro byte e do último byte ```[A, B, C, D]```
+```resultado = [D, B, C, A]```
+
+```py
+def rot_byte(self, data):
+    return data[1:] + data[:1]
+```
+
+### 1.2 SubBytes
+
+- Nessa função retorna o índice da matriz sbox, o cada byte em data é separado
+em 2: b >> 4 move os 4 bits mais significativos para a direita e faz a operação
+END (&) com 0x0F. Esse operador ele retorna 1 se ambos bits de a & b forem 1.
+dessa forma os 4 mais significativos definem a linha da matriz e os 4 menos 
+significativos definem a coluna.
+
+```py
+def sub_byte(self, data, sbox):
+    return [sbox[(b >> 4) & 0x0F][b & 0x0F] for b in data]
+```
+
+### 1.3 XOR Bit a Bit
+
+- Nessa função é feito o XOR bit a bit de um bit a e um bit b.
+na operação XOR se: 0 ^ 0 = 0, 1 ^ 0 = 1, 1 ^ 1 = 0
+
+```py
+def xor_byte(self, a, b):
+    return [x ^ y for x, y in zip(a, b)]
+```
+
+### 1.4 Expansão de Chave
+
+- Aqui é definido quantas subchaves serão criadas de acordo com o tamanho da
+chave original, subchave de 44 palavras se for 16 bytes, 52 para 24 bytes e 60
+para 32 byes. Para cada quantidade de palavra é dividido em grupos de palavras
+4 para 44, 6 para 52, 8 para 60.
+
+```py
+palavras = (44 if len(self.key) == 16 else 52 if len(self.key) == 24 else 60)
+grupos_palavras = (4 if palavras == 44 else 6 if palavras == 52 else 8)
+```
+
+- Nessa linha divide a chave em uma matriz 4x4, ou seja 16 Bytes
+
+```py
+bloco = [list(self.key[i:i+4]) for i in range(0, 16, 4)]
+```
+
+- iniciar um for até a quantidade final de palavras, palavra_temp recebe o
+ultimo bloco gerado
+
+```py
+for i in range(4, palavras):
+    palavra_temp = bloco[i - 1]
+    if i % 4 == 0:
+```
+- rcon[i // grupos_palavras] Pega o índice do elemento da tabela rcon
+
+```py
+palavra_temp = self.rot_byte(palavra_temp)
+palavra_temp = self.sub_byte(palavra_temp, sbox)
+palavra_temp = self.xor_byte(palavra_temp, rcon[i // grupos_palavras])
+```
+
+- Faz o XOR com 4 bits anteriores do bloco com os bits da palavra temporária e
+adiciona ao bloco os novos bytes
+
+```py
+novos_bytes = self.xor_byte(bloco[i - 4], palavra_temp)
+bloco.append(novos_bytes)
+```
+- Essa linha é responsável por concatenar a cada 4 bytes da matriz e transformar
+em uma lista linear
+
+```py
+return [sum(bloco[i:i+4], []) for i in range(0, palavras, 4)]
+```
+
+## 2. aes.py
+
+Módulo principal da criptografia AES.
+
+### 2.1 Padding
+
+- Função responsável pelo preenchimento de bytes faltando, se faltam 5 bytes 
+para completar 16 bytes, ele preenche com 5 bytes ```\x05```, e assim
+sucessivamente para 32 e multiplos de 16.
+
+```py
+def pcks7_pad(self, data: bytes, tamanho_bloco=16):
+    tamanho_pad = tamanho_bloco - (len(data) % tamanho_bloco)
+    pad = bytes([tamanho_pad] * tamanho_pad)
+    return data + pad
+```
+
+### 2.2 Unpadding
+
+- Função responsável por remover o preenchimento, tamanho_ad recebe o ultimo
+byte de data (no caso data[-1]), se o tamanho_pad for menor que 1 (0) ou maior
+que 16 levanta um erro de valor, pois o preenchimento só pode ser feito de 1 até
+16.
+Se o ultimo byte de pad for diferente do tamanho total de padding também levanta
+um erro de valor, caso contrário retorna o data sem o tamanho_pad,
+(data[:-tamanho_pad])
+
+```py
+def pcks7_unpad(self, data: bytes):
+    tamanho_pad = data[-1]
+    if tamanho_pad < 1 or tamanho_pad > 16:
+        raise ValueError('padding inválido')
+    if data[-tamanho_pad:] != bytes([tamanho_pad] * tamanho_pad):
+        raise ValueError('padding inválido #2')
+    return data[:-tamanho_pad]
+```
+
+### 2.3 AddroundKey
+
+- Faz um XOR entre cada bit do bloco de 4x4 com cada bit da chave
+
+```py
+def addroundkey(self, bloco, round_key):
+    result = bytes([b ^ k for b, k in zip(bloco, round_key)])
+    return result
+```
+
