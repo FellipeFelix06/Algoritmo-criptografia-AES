@@ -112,8 +112,8 @@ seria da seguinte maneira.:
 1 ÷ 2 = 0 (resto 1)
 ```
 
-É feito a divisão sucessiva de 2 até não ser possível dividir, no final é
-lido inverso. 
+É feito a divisão sucessiva de 2 até não ser possível dividir, no final é lido
+de baixo para cima. 
 
 sendo assim é feito a combinação de cada bit de cada bytes da chave com
 cada bit de cada bytes da mensagem.
