@@ -19,14 +19,22 @@ Existe uma maneira muito simples de converter bits para decimal,
 separamos 8 bits e classificamos cada um por "casas" de 7 a 0. Cada casa
 representa um expoente que será feito por base 2.
 
-Ou seja: 2^7 = 128, 2^6 = 64, 2^5 = 32, 2^4 = 16, 2^3 = 8, 2^2 = 4, 2^1 = 2,
-2^0 = 1.
+Ou seja: 2⁷ = 128, 2⁶ = 64, 2⁵ = 32, 2⁴ = 16, 2³ = 8, 2² = 4, 2¹ = 2, 2⁰ = 1
 
 Multiplicamos cada bit pelo resultado de cada potência, e somamos todos os
 valores.
 
-7 6 5 4 3 2 1 0
-1 0 1 1 0 0 1 0
+| Índice | Bit |
+|:------:|:---:|
+|    7   |  1  |
+|    6   |  0  |
+|    5   |  1  |
+|    4   |  1  |
+|    3   |  0  |
+|    2   |  0  |
+|    1   |  1  |
+|    0   |  0  |
+
 
 128 + 0 + 32 + 16 + 0 + 0 + 2 + 0 = 178
 
@@ -51,24 +59,25 @@ guardamos o resto da divisão.
 
 Em Hexadecimal deve-se conter 16 valores diferentes, são eles:
 
-```
-0 = 0
-1 = 1
-2 = 2
-3 = 3
-4 = 4
-5 = 5
-6 = 6
-7 = 7
-8 = 8
-9 = 9
-10 = A
-11 = B
-12 = C
-13 = D
-14 = E
-15 = F
-```
+| Valor  | Hex |
+| ------ |:---:|
+|   0    |  0  |
+|   1    |  1  |
+|   2    |  2  |
+|   3    |  3  |
+|   4    |  4  |
+|   5    |  5  |
+|   6    |  6  |
+|   7    |  7  |
+|   8    |  8  |
+|   9    |  9  |
+|  10    |  A  |
+|  11    |  B  |
+|  12    |  C  |
+|  13    |  D  |
+|  14    |  E  |
+|  15    |  F  |
+
 Os valores de 10 a 15 são representados por letras e os resultados
 das divisões são lidos de baixo para cima, com isso:
 >```
@@ -98,25 +107,8 @@ s-box, xor de cada byte com uma outra tabela chamada rcon.
 ## Processo 2 - AddRoundKey.
 
 - cada byte da chave é combinado com os bytes da mensagem numa matriz 4x4
-usando operação bit por bit xor, que irei explicar como funciona.
-tomando como exemplo o "A" que na tabela é 65, transformando para binário
-seria da seguinte maneira.:
-
-```
-65 ÷ 2 = 32 (resto 1)
-32 ÷ 2 = 16 (resto 0)
-16 ÷ 2 = 8 (resto 0)
-8 ÷ 2 = 4 (resto 0)
-4 ÷ 2 = 2 (resto 0)
-2 ÷ 2 = 1 (resto 0)
-1 ÷ 2 = 0 (resto 1)
-```
-
-É feito a divisão sucessiva de 2 até não ser possível dividir, no final é lido
-de baixo para cima. 
-
-sendo assim é feito a combinação de cada bit de cada bytes da chave com
-cada bit de cada bytes da mensagem.
+usando operação XOR bit a bit. É feita a combinação de cada bit de cada bytes
+da chave com cada bit de cada bytes da mensagem.
 
 Dessa forma, "A" em binário é 01000001 e "B" 01000010, fazendo a
 combinação sabendo que, se os valores forem iguais ele será 0 (1 - 1 = 0),
@@ -131,20 +123,8 @@ e se um valor um a for 1 e o valor b for 0 retorna 1 (1 - 0 = 1).
  ```
 
 Nesse exemplo o resultado do xor bit a bit de "A" e "B" é ```00000011```, agora
-é feito uma potenciação com base 2 e expoente 7 regredindo até o expoente 0.
-
-```
-2⁷ = 128
-2⁶ = 64
-2⁵ = 32
-2⁴ = 16
-2³ = 8
-2² = 4
-2¹ = 2
-2⁰ = 1
-```
-
-Todos os valores da potenciação são multiplicados com o cada valor de cada bit
+é feito uma potenciação com base 2 e expoente 7 regredindo até o expoente 0 e
+todos os valores da potenciação são multiplicados com o cada valor de cada bit
  
 ```
 0 x 128 = 0
@@ -157,11 +137,8 @@ Todos os valores da potenciação são multiplicados com o cada valor de cada bi
 1 x 1 = 1
 ```
 
-A soma de todos os valores resultam em um identificador de um dos caracteres
-da tabela unicode, nesse caso 3 é um caractere de controle não imprimível
-mas convertido para hexadecimal essa seria sua representação ```\x03```.
-
-a partir dessa lógica é feito com todos os outros, bloco por bloco de 
+A soma de todos os valores resulta em um novo byte.
+A partir dessa lógica é feito com todos os outros, bloco por bloco de 
 16 bytes, e se a mensagem conter menos de 16 bytes padrão ou menor que o
 tamanho da chave, é feito o chamado 'Padding' (ou preenchimento) em hex
 nulos mesmo, apenas para completar o bloco fazendo assim uma condição.
@@ -184,32 +161,33 @@ E a quarta pulando três casas.
 
 Exemplo.:
 
-```
-[a0, a1, a2, a3]
-[b0, b1, b2, b3]
-[c0, c1, c2, c3]
-[d0, d1, d2, d3]
-```
+| a0 | a1 | a2 | a3 |
+|----|----|----|----|
+| b0 | b1 | b2 | b3 |
+| c0 | c1 | c2 | c3 |
+| d0 | d1 | d2 | d3 |
 
 com o deslocamento.:
-```
-[a0, a1, a2, a3]
-[b1, b2, b3, b0]
-[c2, c3, c1, c0]
-[d3, d0, d1, d2]
-```
+
+| a0 | a1 | a2 | a3 |
+|----|----|----|----|
+| b1 | b2 | b3 | b0 |
+| c2 | c3 | c1 | c0 |
+| d3 | d0 | d1 | d2 |
+
 3. MixColumns - Nessa etapa cada coluna faz uma operação de multiplicação de
 campo finito GF(2⁸), como exemplo temos o valor em hex 0xC1 em binário esse
 valor é -> 11000010, no MixColumns é feito um shift para a esquerda do bit
 mais significativo que seja 1, caso o mais significativo for 7 ele fará o shift
 para a esquerda e será transbordado, com isso é adicionado o bit 0 na direita,
 se após o shift o mais significativo for 7 é feito um xor com o valor 0x1B:
-```
-[0x02, 0x03, 0x01, 0x01]
-[0x01, 0x02, 0x03, 0x01]
-[0x01, 0x01, 0x02, 0x03]
-[0x03, 0x01, 0x01, 0x02]
-```
+
+| 0x02 | 0x03 | 0x01 | 0x01 |
+|------|------|------|------|
+| 0x01 | 0x02 | 0x03 | 0x01 |
+| 0x01 | 0x01 | 0x02 | 0x03 |
+| 0x03 | 0x01 | 0x01 | 0x02 |
+
 4. AddRoudKey - É feito mais uma vez o precesso de xor bit a bit.
 
 ## Processo Final - Ultima rodada (10, 12, 14).
@@ -223,12 +201,11 @@ ShiftRows e AddRoudKey.
 
 - InvShiftRows - Todos os bytes voltam a sua posição:
 
-```
-[a0, a1, a2, a3]
-[b0, b1, b2, b3]
-[c0, c1, c2, c3]
-[d0, d1, d2, d3]
-```
+| a0 | a1 | a2 | a3 |
+|----|----|----|----|
+| b0 | b1 | b2 | b3 |
+| c0 | c1 | c2 | c3 |
+| d0 | d1 | d2 | d3 |
 
 - InvSubBytes - O valor hex encontrado na tabela é retornado ao valor anterior
 de acordo com a sua linha e a coluna.
@@ -239,12 +216,12 @@ consecutivamente c ⊕ b = a. Isso é feito de 1-9 rodadas.
 - InvMixColumns - No MixColumns é feito com valores fixos de uma matriz, mas não
 com os mesmos do processo da criptografia.
 
-```
-[0E 0B 0D 09]
-[09 0E 0B 0D]
-[0D 09 0E 0B]
-[0B 0D 09 0E]
-```
+| 0E | 0B | 0D | 09 |
+|----|----|----|----|
+| 09 | 0E | 0B | 0D |
+| 0D | 09 | 0E | 0B |
+| 0B | 0D | 09 | 0E |
+
 # Explicação do Código.
 
 > Mapa Mental:
