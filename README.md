@@ -272,16 +272,21 @@ Começamos pelo KeyExpansion, principal módulo que define o rumo da criptografi
 
 ### 1.1 Rotação de bytes
 
+>```py
+>def rot_byte(self, data):
+>    return data[1:] + data[:1]
+>```
+
 - Nessa função é feito o split da data recebida onde ```data[1:] + data[:1]```
 faz a rotação do primeiro byte e do último byte ```[A, B, C, D]```
 ```resultado = [D, B, C, A]```
 
-```py
-def rot_byte(self, data):
-    return data[1:] + data[:1]
-```
-
 ### 1.2 SubBytes
+
+>```py
+>def sub_byte(self, data, sbox):
+>    return [sbox[(b >> 4) & 0x0F][b & 0x0F] for b in data]
+>```
 
 - Nessa função retorna o índice da matriz sbox, o cada byte em data é separado
 em 2: b >> 4 move os 4 bits mais significativos para a direita e faz a operação
@@ -289,22 +294,37 @@ END (&) com 0x0F. Esse operador ele retorna 1 se ambos bits de a & b forem 1.
 dessa forma os 4 mais significativos definem a linha da matriz e os 4 menos 
 significativos definem a coluna.
 
-```py
-def sub_byte(self, data, sbox):
-    return [sbox[(b >> 4) & 0x0F][b & 0x0F] for b in data]
-```
-
 ### 1.3 XOR Bit a Bit
+
+>```py
+>def xor_byte(self, a, b):
+>    return [x ^ y for x, y in zip(a, b)]
+>```
 
 - Nessa função é feito o XOR bit a bit de um bit a e um bit b.
 na operação XOR se: 0 ^ 0 = 0, 1 ^ 0 = 1, 1 ^ 1 = 0
 
-```py
-def xor_byte(self, a, b):
-    return [x ^ y for x, y in zip(a, b)]
-```
-
 ### 1.4 Expansão de Chave
+
+>```py
+>def keyexpansion(self):
+>    palavras = (44 if len(self.key) == 16 else 52 if len(self.key) == 24 else 60)
+>    grupos_palavras = (4 if palavras == 44 else 6 if palavras == 52 else 8)
+>
+>    bloco = [list(self.key[i:i+4]) for i in range(0, 16, 4)]
+>    
+>    for i in range(4, palavras):
+>        palavra_temp = bloco[i - 1]
+>        if i % 4 == 0:
+>            palavra_temp = self.rot_byte(palavra_temp)
+>            palavra_temp = self.sub_byte(palavra_temp, sbox)
+>            palavra_temp = self.xor_byte(palavra_temp, rcon[i // grupos_palavras])
+>
+>        novos_bytes = self.xor_byte(bloco[i - 4], palavra_temp)
+>        bloco.append(novos_bytes)
+>
+>    return [sum(bloco[i:i+4], []) for i in range(0, palavras, 4)]
+>```
 
 - Aqui é definido quantas subchaves serão criadas de acordo com o tamanho da
 chave original, subchave de 44 palavras se for 16 bytes, 52 para 24 bytes e 60
@@ -330,7 +350,7 @@ for i in range(4, palavras):
     palavra_temp = bloco[i - 1]
     if i % 4 == 0:
 ```
-- rcon[i // grupos_palavras] Pega o índice do elemento da tabela rcon
+- rcon[i // grupos_palavras] Pega o índice do elemento da tabela [rcon](/rcon/rcon.py)
 
 ```py
 palavra_temp = self.rot_byte(palavra_temp)
@@ -356,20 +376,89 @@ return [sum(bloco[i:i+4], []) for i in range(0, palavras, 4)]
 
 Módulo principal da criptografia AES.
 
-### 2.1 Padding
+### 2.1 Campo Finito
+
+>```py
+>def campo_finito(self, a, b):
+>    acumulador = 0
+>    for i in range(8):
+>        if b & 1:
+>            acumulador ^= a
+>        mais_significativo = a & 0x80
+>        a = (a << 1) & 0xFF 
+>        if mais_significativo:
+>            a ^= 0x1B
+>        b >>= 1
+>    return acumulador 
+>```
+
+- Multiplicação do campo finito GF(2⁸) é um dos processos do [MixColumns](#26-mixcolumns).
+Iniciamos com um for in range(8) pois são 8 bits.
+
+```py
+for i in range(8):
+```
+
+Se o bit menos significativo de b for 1 então é adicionado a ao acumulador usando
+XOR.
+
+```py
+if b & 1:
+    acumulador ^= a
+```
+Verificamos se o bit de a mais significativo é o bit 7, isso determina se uma
+redução polinomial.
+
+```py
+mais_significativo = a & 0x80
+```
+
+Deslocamos um bit de a para a esqueda e (& 0xFF) garante que o byte terá 8 bits
+
+```py
+a = (a << 1) & 0xFF
+```
+
+Se o bit mais significativo ```mais_significativo``` estiver ativo, fazemos a
+redução com XOR de (a ^= 0x1B)
+
+```py
+if mais_significativo:
+    a ^= 0x1B
+```
+
+Por fim deslocamos um bit para a direita de b para processar o proximo bit
+e retornamos o valor acumulado.
+
+```py
+    b >>= 1
+return acumulador
+```
+
+### 2.2 Padding
+
+>```py
+>def pcks7_pad(self, data: bytes, tamanho_bloco=16):
+>    tamanho_pad = tamanho_bloco - (len(data) % tamanho_bloco)
+>    pad = bytes([tamanho_pad] * tamanho_pad)
+>    return data + pad
+>```
 
 - Função responsável pelo preenchimento de bytes faltando, se faltam 5 bytes 
 para completar 16 bytes, ele preenche com 5 bytes ```\x05```, e assim
 sucessivamente para 32 e multiplos de 16.
 
-```py
-def pcks7_pad(self, data: bytes, tamanho_bloco=16):
-    tamanho_pad = tamanho_bloco - (len(data) % tamanho_bloco)
-    pad = bytes([tamanho_pad] * tamanho_pad)
-    return data + pad
-```
+### 2.3 Unpadding
 
-### 2.2 Unpadding
+>```py
+>def pcks7_unpad(self, data: bytes):
+>    tamanho_pad = data[-1]
+>    if tamanho_pad < 1 or tamanho_pad > 16:
+>        raise ValueError('padding inválido')
+>    if data[-tamanho_pad:] != bytes([tamanho_pad] * tamanho_pad):
+>        raise ValueError('padding inválido #2')
+>    return data[:-tamanho_pad]
+>```
 
 - Função responsável por remover o preenchimento, tamanho_ad recebe o ultimo
 byte de data (no caso data[-1]), se o tamanho_pad for menor que 1 (0) ou maior
@@ -379,23 +468,120 @@ Se o ultimo byte de pad for diferente do tamanho total de padding também levant
 um erro de valor, caso contrário retorna o data sem o tamanho_pad,
 (data[:-tamanho_pad])
 
-```py
-def pcks7_unpad(self, data: bytes):
-    tamanho_pad = data[-1]
-    if tamanho_pad < 1 or tamanho_pad > 16:
-        raise ValueError('padding inválido')
-    if data[-tamanho_pad:] != bytes([tamanho_pad] * tamanho_pad):
-        raise ValueError('padding inválido #2')
-    return data[:-tamanho_pad]
-```
+### 2.4 AddroundKey
 
-### 2.3 AddroundKey
+>```py
+>def addroundkey(self, bloco, round_key):
+>    result = bytes([b ^ k for b, k in zip(bloco, round_key)])
+>    return result
+>```
 
 - Faz um XOR entre cada bit do bloco de 4x4 com cada bit da chave
 
+### 2.5 ShiftRows
+
+>```py
+>def shiftrows(self, matriz):
+>    for i in range(1, 4):
+>        matriz[i] = matriz[i][i:] + matriz[i][:i]
+>    return matriz
+>```
+
+- Função responsável pela troca de posição dos índices, exemplo.:
+[A, B, C, D]
+
+i = 2
+2 = B
+
+matriz[2] = matriz[2][2:] + matriz[2][:2] = [C, D, A, B]
+
+### 2.6 MixColumns
+
+>```py
+>def mixcolumns(self, matriz, matriz_mix):
+>    nova_matriz = []
+>
+>    for coluna_transposta in matriz:
+>        nova_coluna = []
+>        for linha_mixcolumns in matriz_mix:
+>            acumulador = 0
+>            for i, j in zip(linha_mixcolumns, coluna_transposta):
+>                acumulador ^= self.campo_finito(j, i)
+>            nova_coluna.append(acumulador)
+>        nova_matriz.append(nova_coluna)
+>```
+
+- Essa função faz a multiplicação pelo campo finito de cada bloco 4x4 do data 
+por uma matriz fixa exigida pelo método AES.
+
+```nova_matriz = []``` é a variável que armazenará a matriz quando passar por
+todos os loops.
+
+Transformando o texto com padding em uma lista separando cada índice e em
+seguida monta uma matriz 4x4
+
+>```py
+>for i in range(0, len(texto_com_pad), 16)
+>    estado = list(texto_com_pad[i:i+16]) # ['1', '2', '3', '4', '5', '6', '7'...]
+>    matriz = [list(estado[i:i + 4]) for i in range(0, 16, 4)] # matriz 4x4
+>```
+
+Com a matriz montada, fazemos a trasposição dela, ou seja as linhas de uma
+matriz vira colunas.
+
 ```py
-def addroundkey(self, bloco, round_key):
-    result = bytes([b ^ k for b, k in zip(bloco, round_key)])
-    return result
+transposta = list(zip(*matriz))
+```
+Esse for itera em cada índice de uma matriz transposta.
+
+```py
+for coluna_transposta in matriz
 ```
 
+```nova_coluna = []``` armazena a nova coluna formada depois do loop interno
+
+Itera em cada índice da matriz fixa do [MixColumns](/mixcolumns/mixcolumns.py)
+e adiciona um acumulador.
+
+```py
+for linha_mixcolumns in matriz_mix:
+    acumulador = 0
+```
+Próximo for itera entre cada item da linha da matriz do mixcolumns e cada 
+item da coluna da transposta, em seguida faz o XOR e acumula o resultado da
+multiplicação do campo finito de j e i.
+
+```py
+for i, j in zip(linha_mixcolumns, coluna_transposta):
+    acumulador ^= self.campo_finito(j, i)
+```
+Adiciona os resultados na nova matriz.
+
+```py
+    nova_coluna.append(acumulador)
+nova_matriz.append(nova_coluna)
+```
+
+### 2.7 InvShiftRows
+
+>```py
+>def invshiftrows(self, matriz):
+>    for i in range(1, 4):
+>        matriz[i] = matriz[i][-i:] + matriz[i][:-i]
+>    return matriz
+>```
+
+- Processo inverso do [ShiftRows](#25-shiftrows)
+
+### 2.8 InvSubBytes
+
+```py
+def invsubbytes(self, matriz):
+    for r in range(4):
+        for c in range(4):
+            b = matriz[r][c]
+            matriz[r][c] = inv_sbox[(b >> 4) & 0x0F][b & 0x0F]
+    return matriz
+```
+
+- Processo inverso do [SubBytes](#12-subbytes) usando a tabela inversa [inv_Sbox](/sbox/sbox.py)
